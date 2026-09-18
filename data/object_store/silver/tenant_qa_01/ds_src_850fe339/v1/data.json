@@ -1,0 +1,30 @@
+{
+  "dataset_id": "ds_src_850fe339",
+  "tenant_id": "tenant_qa_01",
+  "version": 1,
+  "layer": "SILVER",
+  "clean_records_count": 3,
+  "records": [
+    {
+      "order_id": "ord_2001",
+      "customer_id": "cust_601",
+      "amount": 199.99,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_2003",
+      "customer_id": "cust_603",
+      "amount": 320.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_2005",
+      "customer_id": "cust_605",
+      "amount": 850.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    }
+  ]
+}

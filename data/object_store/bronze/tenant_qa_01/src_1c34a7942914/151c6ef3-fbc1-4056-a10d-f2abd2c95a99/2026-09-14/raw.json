@@ -1,0 +1,46 @@
+{
+  "run_id": "151c6ef3-fbc1-4056-a10d-f2abd2c95a99",
+  "tenant_id": "tenant_qa_01",
+  "source_id": "src_1c34a7942914",
+  "source_type": "CSV",
+  "ingestion_date": "2026-09-14",
+  "records_count": 5,
+  "checksum": "979f0e45ab673eaba8731f442f46e13644207fe811a459cb387ec269a91558a6",
+  "records": [
+    {
+      "order_id": "ord_2001",
+      "customer_id": "cust_601",
+      "amount": 199.99,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_2002",
+      "customer_id": null,
+      "amount": null,
+      "status": null,
+      "transaction_date": null
+    },
+    {
+      "order_id": "ord_2003",
+      "customer_id": "cust_603",
+      "amount": 320.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": null,
+      "customer_id": null,
+      "amount": null,
+      "status": null,
+      "transaction_date": null
+    },
+    {
+      "order_id": "ord_2005",
+      "customer_id": "cust_605",
+      "amount": 850.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    }
+  ]
+}

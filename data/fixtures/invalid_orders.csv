@@ -1,0 +1,6 @@
+order_id,customer_id,amount,status,transaction_date
+ord_2001,cust_601,199.99,COMPLETED,2026-09-14
+ord_2002,,,,,
+ord_2003,cust_603,320.00,COMPLETED,2026-09-14
+,,,,,
+ord_2005,cust_605,850.00,COMPLETED,2026-09-14

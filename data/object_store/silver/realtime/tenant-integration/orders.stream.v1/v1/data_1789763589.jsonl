@@ -1,0 +1,1 @@
+{"event_id": "f81a4878-c290-456e-bbe0-1112e2f961e7", "event_type": "order.placed", "tenant_id": "tenant-integration", "entity_type": "order", "entity_id": "ORD-100", "occurred_at": "2026-09-18T20:33:09.857709+00:00", "schema_version": "1.0", "item": "Widget-100"}

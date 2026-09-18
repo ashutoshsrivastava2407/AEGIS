@@ -1,0 +1,73 @@
+# AEGIS Step 10 — Requirements Traceability Matrix (63 Acceptance Criteria)
+
+This document provides machine-readable 1:1 traceability for all **63 Step 10 Enterprise Governance, Security & Compliance Requirements**.
+
+---
+
+## Traceability Matrix
+
+| REQ-ID | Description | Implementation File / Component | Database Model | API Endpoint | UI Section | Automated Test ID | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **REQ-01** | Server-authoritative governance control chain | `services/security/governance_service.py` | `UserIdentityModel` | `/api/v1/governance/pipeline/run` | Governance Overview | `test_full_governed_enterprise_pipeline_execution` | **REQ-01 PASS** |
+| **REQ-02** | Non-bypassable identity & auth checks | `services/security/authentication.py` | `SecuritySessionModel` | `/api/v1/identity/users` | Identity & Users | `test_authentication_service` | **REQ-02 PASS** |
+| **REQ-03** | Human vs non-human identity separation | `services/security/identity.py` | `ServiceIdentityModel` | `/api/v1/identity/services` | Identity & Users | `test_service_identity_creation` | **REQ-03 PASS** |
+| **REQ-04** | Fine-grained RBAC role capabilities | `services/security/rbac.py` | `RoleModel` | `/api/v1/governance/policies` | Roles & Permissions | `test_server_authoritative_authorization_engine` | **REQ-04 PASS** |
+| **REQ-05** | ABAC environmental attribute evaluation | `services/security/abac.py` | `PermissionModel` | `/api/v1/governance/policies` | Roles & Permissions | `test_cross_tenant_access_isolation_blocking` | **REQ-05 PASS** |
+| **REQ-06** | Declarative policy decision evaluation | `services/security/policy_engine.py` | `SecurityPolicyModel` | `/api/v1/governance/policies` | Declarative Policies | `test_policy_engine_and_simulator` | **REQ-06 PASS** |
+| **REQ-07** | Policy versioning & SHA-256 fingerprinting | `services/security/policy_registry.py` | `PolicyVersionModel` | `/api/v1/governance/policies` | Declarative Policies | `test_policy_engine_and_simulator` | **REQ-07 PASS** |
+| **REQ-08** | Non-mutating policy what-if simulation | `services/security/policy_simulator.py` | N/A (Stateless) | `/api/v1/governance/policies` | Policy Simulator | `test_policy_engine_and_simulator` | **REQ-08 PASS** |
+| **REQ-09** | Time-bounded governed policy exceptions | `services/security/exceptions.py` | `PolicyExceptionModel` | `/api/v1/governance/policies` | Exceptions & Break-Glass | `test_policy_exception_manager` | **REQ-09 PASS** |
+| **REQ-10** | Emergency break-glass session management | `services/security/privileged_access.py` | `BreakGlassSessionModel` | `/api/v1/governance/policies` | Exceptions & Break-Glass | `test_break_glass_manager` | **REQ-10 PASS** |
+| **REQ-11** | Break-glass post-use review workflow | `services/security/privileged_access.py` | `BreakGlassReviewModel` | `/api/v1/governance/policies` | Exceptions & Break-Glass | `test_break_glass_post_use_review_lifecycle` | **REQ-11 PASS** |
+| **REQ-12** | Data sensitivity classification levels | `services/security/data_governance.py` | `DataClassificationModel` | `/api/v1/governance/policies` | Data Governance | `test_restricted_data_auth_strength_gating` | **REQ-12 PASS** |
+| **REQ-13** | Field-level sensitive data & PII masking | `services/security/data_governance.py` | N/A | `/api/v1/governance/policies` | Data Governance | `test_field_level_sensitive_data_masking` | **REQ-13 PASS** |
+| **REQ-14** | Export permission restrictions | `services/security/data_governance.py` | N/A | `/api/v1/governance/policies` | Data Governance | `test_data_export_permission_gating` | **REQ-14 PASS** |
+| **REQ-15** | Data residency region validation | `services/security/data_governance.py` | `DataClassificationModel` | `/api/v1/governance/policies` | Data Governance | `test_data_residency_enforcement_gating` | **REQ-15 PASS** |
+| **REQ-16** | Legal hold protection over retention cleanup | `services/security/data_governance.py` | `LegalHoldModel` | `/api/v1/governance/policies` | Data Governance | `test_legal_hold_overrides_retention_deletion` | **REQ-16 PASS** |
+| **REQ-17** | LLM provider governance restrictions | `services/security/ai_governance.py` | `AIGovernancePolicyModel` | `/api/v1/governance/policies` | AI & Model Governance | `test_ai_and_agent_governance` | **REQ-17 PASS** |
+| **REQ-18** | Prompt injection defense filtering | `services/security/ai_governance.py` | N/A | `/api/v1/governance/policies` | AI & Model Governance | `test_ai_and_agent_governance` | **REQ-18 PASS** |
+| **REQ-19** | Agent tool allowlists & risk ceilings | `services/security/agent_governance.py` | `AgentPermissionBoundaryModel` | `/api/v1/governance/policies` | Agent Boundaries | `test_ai_and_agent_governance` | **REQ-19 PASS** |
+| **REQ-20** | Step 9 Workflow governance integration | `services/security/workflow_governance.py` | N/A | `/api/v1/governance/pipeline/run` | Workflow Governance | `test_full_governed_enterprise_pipeline_execution` | **REQ-20 PASS** |
+| **REQ-21** | Security audit event stream logging | `services/security/security_events.py` | `SecurityEventModel` | `/api/v1/security/events` | Security Events | `test_security_threat_detector` | **REQ-21 PASS** |
+| **REQ-22** | Security threat findings management | `services/security/security_findings.py` | `SecurityFindingModel` | `/api/v1/security/events` | Security Events | `test_security_threat_detector` | **REQ-22 PASS** |
+| **REQ-23** | SOC 2 / ISO 27001 posture scoring | `services/security/compliance.py` | `ComplianceControlModel` | `/api/v1/compliance/posture` | Compliance & Evidence | `test_compliance_posture_api_contract` | **REQ-23 PASS** |
+| **REQ-24** | Compliance evidence collector | `services/security/evidence.py` | `ComplianceEvidenceModel` | `/api/v1/compliance/posture` | Compliance & Evidence | `test_full_governed_enterprise_pipeline_execution` | **REQ-24 PASS** |
+| **REQ-25** | Sealed auditable evidence packages | `services/security/evidence.py` | `AuditPackageModel` | `/api/v1/compliance/posture` | Compliance & Evidence | `test_full_governed_enterprise_pipeline_execution` | **REQ-25 PASS** |
+| **REQ-26** | Access certification review campaigns | `services/security/access_reviews.py` | `AccessReviewCampaignModel` | `/api/v1/governance/policies` | Access Reviews | `test_access_certification_campaign_lifecycle` | **REQ-26 PASS** |
+| **REQ-27** | SHA-256 hash-chained audit explorer | `services/security/audit_integrity.py` | `SecurityEventModel` | `/api/v1/governance/audit` | Audit Explorer | `test_tamper_evident_audit_hash_chain` | **REQ-27 PASS** |
+| **REQ-28** | Audit segment checkpointing | `services/security/audit_integrity.py` | `AuditIntegrityCheckpointModel` | `/api/v1/governance/audit` | Audit Explorer | `test_audit_segment_checkpointing_and_anchoring` | **REQ-28 PASS** |
+| **REQ-29** | Pluggable trust anchor abstraction | `services/security/trust_anchors.py` | `AuditIntegrityCheckpointModel` | `/api/v1/governance/audit` | Audit Explorer | `test_trust_anchor_verification_boundaries` | **REQ-29 PASS** |
+| **REQ-30** | Governance lineage chain tracer | `services/security/governance_lineage.py` | N/A | `/api/v1/governance/pipeline/run` | Governance Lineage | `test_full_governed_enterprise_pipeline_execution` | **REQ-30 PASS** |
+| **REQ-31** | Durable historical policy decision records | `services/security/durable_evidence.py` | `DurablePolicyDecisionModel` | `/api/v1/governance/pipeline/run` | Governance Overview | `test_durable_policy_decision_recording_and_freshness` | **REQ-31 PASS** |
+| **REQ-32** | Policy decision immutability | `services/security/durable_evidence.py` | `DurablePolicyDecisionModel` | `/api/v1/governance/pipeline/run` | Governance Overview | `test_durable_policy_decision_recording_and_freshness` | **REQ-32 PASS** |
+| **REQ-33** | Policy freshness & TOCTOU revalidation | `services/security/durable_evidence.py` | `DurablePolicyDecisionModel` | `/api/v1/governance/pipeline/run` | Governance Overview | `test_stale_policy_version_toctou_revalidation` | **REQ-33 PASS** |
+| **REQ-34** | OIDC JWKS RS256/ES256/Ed25519 validation | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_oidc_jwks_protocol_validation` | **REQ-34 PASS** |
+| **REQ-35** | OIDC state & nonce mismatch rejection | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_oidc_state_nonce_mismatch_rejection` | **REQ-35 PASS** |
+| **REQ-36** | SAML 2.0 XML signature verification | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_saml_xml_digital_signature_verification` | **REQ-36 PASS** |
+| **REQ-37** | SAML XXE protection & wrapping defense | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_saml_xxe_and_signature_wrapping_defense` | **REQ-37 PASS** |
+| **REQ-38** | Local auth account lockout protection | `services/security/authentication.py` | `SecuritySessionModel` | `/api/v1/identity/users` | Identity & Users | `test_local_auth_lockout_protection` | **REQ-38 PASS** |
+| **REQ-39** | Session token revocation list | `services/security/authentication.py` | `SecuritySessionModel` | `/api/v1/identity/users` | Identity & Users | `test_session_token_revocation` | **REQ-39 PASS** |
+| **REQ-40** | Policy-driven MFA strength gating | `services/security/mfa.py` | `MFADeviceModel` | `/api/v1/governance/pipeline/run` | Identity & Users | `test_mfa_policy_manager` | **REQ-40 PASS** |
+| **REQ-41** | Adversarial IDOR defense | `services/security/authorization.py` | N/A | `/api/v1/governance/policies` | Roles & Permissions | `test_idor_authorization_blocking` | **REQ-41 PASS** |
+| **REQ-42** | Adversarial role escalation defense | `services/security/authorization.py` | `RoleAssignmentModel` | `/api/v1/identity/users` | Roles & Permissions | `test_role_escalation_blocking` | **REQ-42 PASS** |
+| **REQ-43** | Adversarial ABAC attribute spoofing defense | `services/security/abac.py` | N/A | `/api/v1/governance/policies` | Roles & Permissions | `test_abac_attribute_spoofing_rejection` | **REQ-43 PASS** |
+| **REQ-44** | Segregation of Duties (SoD) enforcement | `services/security/authorization.py` | `SoDRuleModel` | `/api/v1/governance/policies` | Declarative Policies | `test_segregation_of_duties_enforcement` | **REQ-44 PASS** |
+| **REQ-45** | Concurrent role assignment race test | `services/security/authorization.py` | `RoleAssignmentModel` | `/api/v1/identity/users` | Roles & Permissions | `test_concurrent_role_assignment_and_authorization` | **REQ-45 PASS** |
+| **REQ-46** | Concurrent policy activation race test | `services/security/policy_engine.py` | `PolicyVersionModel` | `/api/v1/governance/policies` | Declarative Policies | `test_concurrent_policy_activation_race` | **REQ-46 PASS** |
+| **REQ-47** | High-risk fail-closed audit protection | `services/security/governance_service.py` | `SecurityEventModel` | `/api/v1/governance/pipeline/run` | Security Events | `test_high_risk_consequential_audit_failure_blocks_action` | **REQ-47 PASS** |
+| **REQ-48** | Low-risk degraded telemetry policy | `services/security/governance_service.py` | N/A | `/api/v1/security/events` | Security Events | `test_low_risk_telemetry_failure_allows_degraded_mode` | **REQ-48 PASS** |
+| **REQ-49** | RAG document collection permissions | `services/security/ai_governance.py` | N/A | `/api/v1/governance/policies` | AI & Model Governance | `test_rag_document_authorization_filtering` | **REQ-49 PASS** |
+| **REQ-50** | Agent identity cross-service isolation | `services/security/agent_governance.py` | `ServiceIdentityModel` | `/api/v1/identity/services` | Agent Boundaries | `test_agent_cross_service_impersonation_rejection` | **REQ-50 PASS** |
+| **REQ-51** | Cryptographic key rotation & rollover | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_cryptographic_key_rotation_and_jwks_rollover` | **REQ-51 PASS** |
+| **REQ-52** | Algorithm confusion defense (none/HMAC) | `services/security/authentication.py` | N/A | `/api/v1/identity/users` | Identity & Users | `test_crypto_algorithm_confusion_defense` | **REQ-52 PASS** |
+| **REQ-53** | 12-Stage governance trace reconstruction | `services/security/governance_lineage.py` | N/A | `/api/v1/governance/pipeline/run` | Governance Lineage | `test_governance_12_stage_trace_reconstruction` | **REQ-53 PASS** |
+| **REQ-54** | Audit tampering detection (deletion/insertion) | `services/security/audit_integrity.py` | `SecurityEventModel` | `/api/v1/governance/audit` | Audit Explorer | `test_tamper_evident_audit_chain_tamper_detection` | **REQ-54 PASS** |
+| **REQ-55** | Audit truncation & reordering defense | `services/security/audit_integrity.py` | `AuditIntegrityCheckpointModel` | `/api/v1/governance/audit` | Audit Explorer | `test_audit_chain_truncation_and_reordering_detection` | **REQ-55 PASS** |
+| **REQ-56** | 15-Section Governance Workspace UI | `apps/web/src/domains/governance/GovernanceWorkspace.tsx` | N/A | All API Routers | All 15 UI Tabs | Frontend Production Build | **REQ-56 PASS** |
+| **REQ-57** | REST API `/api/v1/governance/audit` | `apps/api/routers/v1/governance.py` | `SecurityEventModel` | `/api/v1/governance/audit` | Audit Explorer | `test_governance_audit_api_contract` | **REQ-57 PASS** |
+| **REQ-58** | REST API `/api/v1/governance/policies` | `apps/api/routers/v1/governance.py` | `PolicyModel` | `/api/v1/governance/policies` | Declarative Policies | `test_governance_policies_api_contract` | **REQ-58 PASS** |
+| **REQ-59** | REST API `/api/v1/identity/users` | `apps/api/routers/v1/identity.py` | `UserIdentityModel` | `/api/v1/identity/users` | Identity & Users | `test_identity_users_api_contract` | **REQ-59 PASS** |
+| **REQ-60** | REST API `/api/v1/identity/services` | `apps/api/routers/v1/identity.py` | `ServiceIdentityModel` | `/api/v1/identity/services` | Identity & Users | `test_identity_service_identities_api_contract` | **REQ-60 PASS** |
+| **REQ-61** | REST API `/api/v1/security/events` | `apps/api/routers/v1/security_router.py` | `SecurityEventModel` | `/api/v1/security/events` | Security Events | `test_security_events_api_contract` | **REQ-61 PASS** |
+| **REQ-62** | REST API `/api/v1/compliance/posture` | `apps/api/routers/v1/compliance_router.py` | `ComplianceControlModel` | `/api/v1/compliance/posture` | Compliance & Evidence | `test_compliance_posture_api_contract` | **REQ-62 PASS** |
+| **REQ-63** | Absolute project isolation | Repository-wide | N/A | N/A | N/A | Zero external branding scan | **REQ-63 PASS** |

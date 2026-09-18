@@ -1,0 +1,44 @@
+{
+  "dataset_id": "ds_src_e2ab752e",
+  "tenant_id": "00000000-0000-0000-0000-000000000001",
+  "version": 1,
+  "layer": "SILVER",
+  "clean_records_count": 5,
+  "records": [
+    {
+      "order_id": "ord_1001",
+      "customer_id": "cust_501",
+      "amount": 249.99,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_1002",
+      "customer_id": "cust_502",
+      "amount": 120.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_1003",
+      "customer_id": "cust_503",
+      "amount": 450.5,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_1004",
+      "customer_id": "cust_504",
+      "amount": 89.95,
+      "status": "PENDING",
+      "transaction_date": "2026-09-14"
+    },
+    {
+      "order_id": "ord_1005",
+      "customer_id": "cust_505",
+      "amount": 1250.0,
+      "status": "COMPLETED",
+      "transaction_date": "2026-09-14"
+    }
+  ]
+}

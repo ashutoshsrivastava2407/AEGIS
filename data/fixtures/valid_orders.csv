@@ -1,0 +1,6 @@
+order_id,customer_id,amount,status,transaction_date
+ord_1001,cust_501,249.99,COMPLETED,2026-09-14
+ord_1002,cust_502,120.00,COMPLETED,2026-09-14
+ord_1003,cust_503,450.50,COMPLETED,2026-09-14
+ord_1004,cust_504,89.95,PENDING,2026-09-14
+ord_1005,cust_505,1250.00,COMPLETED,2026-09-14

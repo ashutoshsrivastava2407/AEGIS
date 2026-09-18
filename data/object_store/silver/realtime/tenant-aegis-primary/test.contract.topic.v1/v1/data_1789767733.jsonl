@@ -1,0 +1,1 @@
+{"event_id": "304e881b-4f91-498d-ba1b-df2928016fef", "event_type": "contract.test.event", "tenant_id": "tenant-aegis-primary", "entity_type": "record", "entity_id": "ENT-1789767733", "occurred_at": "2026-09-18T21:42:13.675856+00:00", "schema_version": "1.0", "key": "value", "count": 100}

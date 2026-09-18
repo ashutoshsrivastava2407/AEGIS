@@ -1,0 +1,23 @@
+[
+  {
+    "event_id": "evt_8001",
+    "event_type": "USER_SIGNUP",
+    "user_id": "usr_901",
+    "region": "US-EAST",
+    "timestamp": "2026-09-14T12:00:00Z"
+  },
+  {
+    "event_id": "evt_8002",
+    "event_type": "CHECKOUT_COMPLETED",
+    "user_id": "usr_902",
+    "region": "EU-WEST",
+    "timestamp": "2026-09-14T12:05:00Z"
+  },
+  {
+    "event_id": "evt_8003",
+    "event_type": "POLICY_CHECKED",
+    "user_id": "usr_903",
+    "region": "AP-SOUTH",
+    "timestamp": "2026-09-14T12:10:00Z"
+  }
+]
