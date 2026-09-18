@@ -116,12 +116,7 @@ export const commandCenterApi = {
   getOverview: async (): Promise<{ success: boolean; data: CommandOverview }> => {
     try {
       const res = await fetch(`${API_BASE}/command/overview`);
-      if (!res.ok) {
-        const fallback = await fetch(`${API_BASE}/command-center/overview`);
-        if (!fallback.ok) throw new Error('Failed to fetch command overview');
-        const json = await fallback.json();
-        return { success: true, data: json.data };
-      }
+      if (!res.ok) throw new Error('Failed to fetch command overview');
       const json = await res.json();
       return { success: true, data: json.data };
     } catch {
@@ -218,12 +213,7 @@ export const commandCenterApi = {
   search: async (query: string): Promise<{ success: boolean; data: SearchResultItem[] }> => {
     try {
       const res = await fetch(`${API_BASE}/command/search?q=${encodeURIComponent(query)}`);
-      if (!res.ok) {
-        const fallback = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
-        if (!fallback.ok) throw new Error('Failed to execute search');
-        const json = await fallback.json();
-        return { success: true, data: json.data?.results || [] };
-      }
+      if (!res.ok) throw new Error('Failed to execute search');
       const json = await res.json();
       return { success: true, data: json.data?.results || [] };
     } catch {

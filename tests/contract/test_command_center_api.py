@@ -8,8 +8,8 @@ client = TestClient(app)
 
 
 def test_command_center_overview_api_contract():
-    """Verify GET /api/v1/command-center/overview contract."""
-    res = client.get("/api/v1/command-center/overview")
+    """Verify GET /api/v1/command/overview contract."""
+    res = client.get("/api/v1/command/overview")
     assert res.status_code == 200
     json_data = res.json()
     assert json_data["success"] is True
@@ -18,8 +18,8 @@ def test_command_center_overview_api_contract():
 
 
 def test_command_center_readiness_api_contract():
-    """Verify GET /api/v1/command-center/readiness contract."""
-    res = client.get("/api/v1/command-center/readiness")
+    """Verify GET /api/v1/command/readiness contract."""
+    res = client.get("/api/v1/command/readiness")
     assert res.status_code == 200
     json_data = res.json()
     assert json_data["success"] is True
@@ -27,8 +27,8 @@ def test_command_center_readiness_api_contract():
 
 
 def test_command_center_trace_api_contract():
-    """Verify GET /api/v1/command-center/trace contract."""
-    res = client.get("/api/v1/command-center/trace")
+    """Verify GET /api/v1/command/trace contract."""
+    res = client.get("/api/v1/command/trace")
     assert res.status_code == 200
     json_data = res.json()
     assert json_data["success"] is True

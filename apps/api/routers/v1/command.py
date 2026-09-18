@@ -88,7 +88,26 @@ async def get_system_readiness(user: UserContext = Depends(get_current_user)):
     )
 
 
-@router.get("/trace/{correlation_id}", summary="Reconstruct End-to-End Trace Tree")
+@router.get("/trace", summary="Reconstruct End-to-End Trace Tree")
+async def reconstruct_trace(
+    correlation_id: Optional[str] = Query(None),
+    trace_id: Optional[str] = Query(None),
+    user: UserContext = Depends(get_current_user)
+):
+    tree = command_service.trace_explorer.reconstruct_trace(
+        correlation_id=correlation_id,
+        trace_id=trace_id,
+        tenant_id=user.tenant_id,
+    )
+    return APIResponse(
+        success=True,
+        data=tree,
+        correlation_id=get_correlation_id(),
+        message="End-to-end trace correlation tree reconstructed"
+    )
+
+
+@router.get("/trace/{correlation_id}", summary="Reconstruct End-to-End Trace Tree by ID")
 async def reconstruct_trace_by_id(
     correlation_id: str,
     user: UserContext = Depends(get_current_user)
