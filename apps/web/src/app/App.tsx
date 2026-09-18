@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DomainId } from '@/types';
+import { DomainId, EvidenceItem } from '@/types';
 import { AppShell } from '@/shell/AppShell';
 import { CommandWorkspace } from '@/domains/command/CommandWorkspace';
 import { DataWorkspace } from '@/domains/data/DataWorkspace';
@@ -17,11 +17,41 @@ import { OperationsWorkspace } from '@/domains/operations/OperationsWorkspace';
 
 export const App: React.FC = () => {
   const [activeDomain, setActiveDomain] = useState<DomainId>('command');
+  const [evidenceItems, setEvidenceItems] = useState<EvidenceItem[]>([
+    {
+      id: 'ev_01',
+      title: 'AEGIS Security Boundary',
+      type: 'DECISION',
+      source: 'ServerPolicyEngine',
+      confidence: 0.99,
+      timestamp: new Date().toISOString(),
+      summary: 'Multi-tenant isolation and RBAC policy rules enforced across API routes.',
+    },
+    {
+      id: 'ev_02',
+      title: 'PostgreSQL & Redis Probe',
+      type: 'LOG',
+      source: 'System Health Check',
+      confidence: 1.0,
+      timestamp: new Date().toISOString(),
+      summary: 'Database connection pool and event cache initialized successfully.',
+    },
+  ]);
+
+  const handleSelectEvidence = (newItem: any) => {
+    setEvidenceItems((prev) => [newItem, ...prev.filter((p) => p.id !== newItem.id)].slice(0, 10));
+  };
 
   const renderDomainWorkspace = () => {
     switch (activeDomain) {
       case 'command':
-        return <CommandWorkspace systemStatus="OPERATIONAL" />;
+        return (
+          <CommandWorkspace
+            systemStatus="OPERATIONAL"
+            onSelectDomain={(domain) => setActiveDomain(domain)}
+            onSelectEvidence={handleSelectEvidence}
+          />
+        );
       case 'data':
         return <DataWorkspace />;
       case 'streaming':
@@ -49,7 +79,13 @@ export const App: React.FC = () => {
       case 'observability':
         return <OperationsWorkspace />;
       default:
-        return <CommandWorkspace systemStatus="OPERATIONAL" />;
+        return (
+          <CommandWorkspace
+            systemStatus="OPERATIONAL"
+            onSelectDomain={(domain) => setActiveDomain(domain)}
+            onSelectEvidence={handleSelectEvidence}
+          />
+        );
     }
   };
 
@@ -58,26 +94,7 @@ export const App: React.FC = () => {
       activeDomain={activeDomain}
       onSelectDomain={(domain) => setActiveDomain(domain)}
       systemStatus="OPERATIONAL"
-      evidenceItems={[
-        {
-          id: 'ev_01',
-          title: 'AEGIS Security Boundary',
-          type: 'DECISION',
-          source: 'Tenant Policy Evaluator',
-          confidence: 0.99,
-          timestamp: new Date().toISOString(),
-          summary: 'Multi-tenant isolation and RBAC policy rules enforced across API routes.',
-        },
-        {
-          id: 'ev_02',
-          title: 'PostgreSQL & Redis Probe',
-          type: 'LOG',
-          source: 'System Health Check',
-          confidence: 1.0,
-          timestamp: new Date().toISOString(),
-          summary: 'Database connection pool and event cache initialized successfully.',
-        },
-      ]}
+      evidenceItems={evidenceItems}
     >
       {renderDomainWorkspace()}
     </AppShell>

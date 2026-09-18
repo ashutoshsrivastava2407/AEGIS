@@ -28,6 +28,45 @@ async def get_command_center_overview(user: UserContext = Depends(get_current_us
     )
 
 
+@router.get("/command-center/health", summary="Get Explainable Enterprise Health Status")
+async def get_command_center_health(user: UserContext = Depends(get_current_user)):
+    health = command_service.health_aggregator.compute_enterprise_health(tenant_id=user.tenant_id)
+    return APIResponse(
+        success=True,
+        data=health,
+        correlation_id=get_correlation_id(),
+        message="Explainable enterprise health score retrieved"
+    )
+
+
+@router.get("/command-center/metrics", summary="Get Command Center Telemetry Metrics")
+async def get_command_center_metrics(
+    time_range: str = Query("24h"),
+    user: UserContext = Depends(get_current_user)
+):
+    metrics = command_service.get_metrics_telemetry(user, time_range=time_range)
+    return APIResponse(
+        success=True,
+        data=metrics,
+        correlation_id=get_correlation_id(),
+        message="Command center telemetry metrics retrieved"
+    )
+
+
+@router.get("/command-center/activity", summary="Get Command Center Activity Stream")
+async def get_command_center_activity(
+    limit: int = Query(15, ge=1, le=100),
+    user: UserContext = Depends(get_current_user)
+):
+    activity = command_service.get_activity_feed(user, limit=limit)
+    return APIResponse(
+        success=True,
+        data=activity,
+        correlation_id=get_correlation_id(),
+        message="Command center activity stream retrieved"
+    )
+
+
 @router.get("/command-center/readiness", summary="Evaluate Evidence-Backed System Readiness Gate")
 async def get_system_readiness(user: UserContext = Depends(get_current_user)):
     readiness = command_service.readiness_gate.evaluate_system_readiness(tenant_id=user.tenant_id)
