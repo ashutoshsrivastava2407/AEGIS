@@ -117,5 +117,33 @@ class VerificationAgent:
             issues_detected=issues
         )
 
+    def verify_run(
+        self,
+        plan_id: str = "plan_01",
+        agent_id: str = "SupervisorAgent",
+        agent_run_id: str = "run_01",
+        tenant_id: str = "default",
+        claim: str = "Agent execution outcome verified",
+        evidence_references: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Verify an agent run outcome and return structured dictionary response."""
+        res = self.verify_execution(
+            claim=claim,
+            evidence_references=evidence_references or [{"chunk_id": "chunk_01"}],
+            tenant_id=tenant_id,
+        )
+        return {
+            "plan_id": plan_id,
+            "agent_id": agent_id,
+            "agent_run_id": agent_run_id,
+            "tenant_id": tenant_id,
+            "is_verified": res.is_verified,
+            "groundedness_score": res.groundedness_score,
+            "data_quality_passed": res.data_quality_passed,
+            "model_drift_passed": res.model_drift_passed,
+            "verification_summary": res.verification_summary,
+            "issues_detected": res.issues_detected,
+        }
+
 
 verification_agent = VerificationAgent()

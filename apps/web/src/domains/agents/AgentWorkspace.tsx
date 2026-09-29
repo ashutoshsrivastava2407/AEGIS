@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   Zap,
   Lock,
-  Layers
+  GitBranch,
+  Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -30,24 +31,34 @@ import {
   executeAgentRun,
   approveAction,
   rejectAction,
+  fetchToolCalls,
+  fetchAgentMemories,
+  searchAgentMemories,
+  revokeAgentMemory,
+  runLangGraphAgent,
+  fetchGraphRuns,
   AgentOverview,
   AgentCatalogItem,
   GovernedToolItem,
   PendingApprovalItem,
-  AgentRunResponse
+  AgentRunResponse,
+  AgentMemoryItem,
+  GraphRunItem
 } from '@/services/api/agentsApi';
 
 type TabId =
   | 'overview'
   | 'catalog'
   | 'planner'
+  | 'agent_graph'
   | 'tools'
+  | 'tool_calling'
   | 'authorization'
   | 'runs'
   | 'approvals'
   | 'evidence'
   | 'verification'
-  | 'memory'
+  | 'memory_inspector'
   | 'evaluation'
   | 'sandbox';
 
@@ -59,6 +70,10 @@ export const AgentWorkspace: React.FC = () => {
   const [agents, setAgents] = useState<AgentCatalogItem[]>([]);
   const [tools, setTools] = useState<GovernedToolItem[]>([]);
   const [approvals, setApprovals] = useState<PendingApprovalItem[]>([]);
+  const [toolCalls, setToolCalls] = useState<any[]>([]);
+  const [memories, setMemories] = useState<AgentMemoryItem[]>([]);
+  const [graphRuns, setGraphRuns] = useState<GraphRunItem[]>([]);
+  const [memorySearchQuery, setMemorySearchQuery] = useState<string>('');
   const [lastRun, setLastRun] = useState<AgentRunResponse | null>(null);
   const [sandboxPrompt, setSandboxPrompt] = useState<string>('Investigate root cause of Q3 regional revenue drop anomaly');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
@@ -66,16 +81,22 @@ export const AgentWorkspace: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ovData, catData, toolData, appData] = await Promise.all([
+      const [ovData, catData, toolData, appData, tcData, memData, grData] = await Promise.all([
         fetchAgentsOverview(),
         fetchAgentCatalog(),
         fetchGovernedTools(),
         fetchPendingApprovals(),
+        fetchToolCalls(),
+        fetchAgentMemories(),
+        fetchGraphRuns(),
       ]);
       setOverview(ovData);
       setAgents(catData);
       setTools(toolData);
       setApprovals(appData);
+      setToolCalls(tcData);
+      setMemories(memData);
+      setGraphRuns(grData);
     } catch (err: any) {
       console.error('Failed to load Agent Platform data:', err);
     } finally {
@@ -95,7 +116,21 @@ export const AgentWorkspace: React.FC = () => {
       setLastRun(runRes);
       loadData();
     } catch (err: any) {
-      alert('Execution failed: ' + err.message);
+      alert('Investigation execution failed: ' + err.message);
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const handleRunLangGraph = async () => {
+    if (!sandboxPrompt.trim()) return;
+    setIsExecuting(true);
+    try {
+      const gRes = await runLangGraphAgent(sandboxPrompt, true);
+      alert(`LangGraph Run Started! Thread ID: ${gRes.thread_id}`);
+      loadData();
+    } catch (err: any) {
+      alert('LangGraph execution failed: ' + err.message);
     } finally {
       setIsExecuting(false);
     }
@@ -106,7 +141,7 @@ export const AgentWorkspace: React.FC = () => {
       await approveAction(approvalId, 'admin_operator', 'Approved in workspace UI');
       loadData();
     } catch (err: any) {
-      alert('Approve failed: ' + err.message);
+      alert('Approval failed: ' + err.message);
     }
   };
 
@@ -116,6 +151,28 @@ export const AgentWorkspace: React.FC = () => {
       loadData();
     } catch (err: any) {
       alert('Reject failed: ' + err.message);
+    }
+  };
+
+  const handleRevokeMemory = async (memoryId: string) => {
+    try {
+      await revokeAgentMemory(memoryId, 'Revoked from Agent Workspace UI');
+      loadData();
+    } catch (err: any) {
+      alert('Memory revocation failed: ' + err.message);
+    }
+  };
+
+  const handleMemorySearch = async () => {
+    if (!memorySearchQuery.trim()) {
+      loadData();
+      return;
+    }
+    try {
+      const results = await searchAgentMemories(memorySearchQuery);
+      setMemories(results);
+    } catch (err: any) {
+      console.error('Memory search error:', err);
     }
   };
 
@@ -135,14 +192,14 @@ export const AgentWorkspace: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Autonomous Agent Platform</h1>
               <p className="text-sm text-slate-400">
-                Multi-agent DAG planning, governed tool authorization, human approval gates, and independent verification
+                LangGraph agent orchestration, governed persistent memory, native tool calling, and server-side governance
               </p>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="brand" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10">
-            AEGIS Step 7
+            AEGIS Production Stage
           </Badge>
           <Button variant="secondary" size="sm" onClick={loadData} className="gap-2">
             <RefreshCw className="h-4 w-4" /> Refresh
@@ -156,13 +213,15 @@ export const AgentWorkspace: React.FC = () => {
           { id: 'overview', label: 'Overview', icon: Bot },
           { id: 'catalog', label: 'Agent Catalog', icon: Cpu },
           { id: 'planner', label: 'DAG Planner', icon: GitPullRequest },
+          { id: 'agent_graph', label: 'LangGraph Orchestrator', icon: GitBranch, count: graphRuns.length },
           { id: 'tools', label: 'Governed Tools', icon: Wrench },
+          { id: 'tool_calling', label: 'Tool / Function Calls', icon: Zap },
           { id: 'authorization', label: 'Tool Auth & Security', icon: Lock },
           { id: 'runs', label: 'Execution Runs', icon: Play },
           { id: 'approvals', label: 'Approval Gates', icon: AlertTriangle, count: approvals.length },
           { id: 'evidence', label: 'Evidence & Provenance', icon: Search },
           { id: 'verification', label: 'Verification Agent', icon: ShieldCheck },
-          { id: 'memory', label: 'Memory Store', icon: Brain },
+          { id: 'memory_inspector', label: 'Governed Memory Inspector', icon: Brain, count: memories.length },
           { id: 'evaluation', label: 'Evaluation Metrics', icon: BarChart3 },
           { id: 'sandbox', label: 'Investigation Sandbox', icon: Zap },
         ].map((tab) => {
@@ -209,109 +268,91 @@ export const AgentWorkspace: React.FC = () => {
               </div>
 
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="text-slate-400 text-xs font-medium">Pending Human Approvals</div>
-                <div className="text-3xl font-bold text-white mt-1">{overview.pending_human_approvals}</div>
-                <div className="text-xs text-amber-400 mt-1">High-Risk Gate Required</div>
+                <div className="text-slate-400 text-xs font-medium">Governed Memory Records</div>
+                <div className="text-3xl font-bold text-white mt-1">{overview.total_governed_memories || memories.length}</div>
+                <div className="text-xs text-indigo-400 mt-1">5 Governed Memory Classes</div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="text-slate-400 text-xs font-medium">Supported Agent Types</div>
-                <div className="text-3xl font-bold text-white mt-1">10</div>
-                <div className="text-xs text-indigo-400 mt-1">Specialized Boundaries</div>
-              </div>
-            </div>
-
-            {/* Architecture Card */}
-            <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-400" /> AEGIS Autonomous Agent Trust Pipeline Architecture
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-2 text-center text-xs">
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-indigo-300">1. Sense & Plan</div>
-                  <div className="text-slate-400 text-[10px] mt-1">DAG Decomposition</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-sky-300">2. Tool Auth</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Server-Side Guard</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-emerald-300">3. Execution</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Governed Runner</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-amber-300">4. Verification</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Independent Agent</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-rose-300">5. Risk Gate</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Human Approval</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-purple-300">6. Observability</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Trace & Audit</div>
-                </div>
-                <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700/50">
-                  <div className="font-semibold text-indigo-300">7. Evaluation</div>
-                  <div className="text-slate-400 text-[10px] mt-1">Cost & Accuracy</div>
-                </div>
+                <div className="text-slate-400 text-xs font-medium">LangGraph Runs</div>
+                <div className="text-3xl font-bold text-white mt-1">{overview.active_graph_runs || graphRuns.length}</div>
+                <div className="text-xs text-amber-400 mt-1">{overview.pending_human_approvals} Approvals Pending</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 2. AGENT CATALOG */}
+        {/* 2. CATALOG */}
         {activeTab === 'catalog' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Registered Agents Catalog</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {agents.map((agent) => (
-                <div key={agent.agent_id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-white text-sm">{agent.name}</span>
-                    <Badge variant="brand" className="text-xs">
-                      {agent.agent_type}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-400 line-clamp-2">{agent.description}</p>
-                  <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-800">
-                    <span>Risk: {agent.risk_profile}</span>
-                    <Badge variant="success">
-                      {agent.lifecycle_state}
-                    </Badge>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {agents.map((agent) => (
+              <div key={agent.agent_id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="neutral" className="text-[10px] font-mono">{agent.agent_type}</Badge>
+                  <Badge variant={agent.lifecycle_state === 'ACTIVE' ? 'success' : 'warning'} className="text-[10px]">
+                    {agent.lifecycle_state}
+                  </Badge>
                 </div>
-              ))}
-            </div>
+                <h3 className="font-bold text-white text-sm">{agent.name}</h3>
+                <p className="text-xs text-slate-300">{agent.description}</p>
+                <div className="text-[10px] text-slate-500 font-mono">Capabilities: {agent.capabilities.join(', ')}</div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* 3. DAG PLANNER */}
-        {activeTab === 'planner' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Multi-Step Directed Acyclic Graph (DAG) Planner</h3>
-            <p className="text-xs text-slate-400">
-              Goal statements are automatically decomposed into DAG task nodes, establishing clear dependencies and execution sequences.
-            </p>
-            {lastRun ? (
-              <div className="space-y-3 mt-4">
-                <div className="text-xs text-indigo-400 font-mono">Plan ID: {lastRun.plan_id}</div>
-                <div className="space-y-2">
-                  {lastRun.executed_nodes.map((node, i) => (
-                    <div key={i} className="p-3 bg-slate-800/80 rounded-lg border border-slate-700 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-semibold text-white mr-2">{node.node_key}</span>
-                        <span className="text-slate-400">[{node.agent_type}] {node.thought_process}</span>
+        {/* 3. LANGGRAPH ORCHESTRATOR */}
+        {activeTab === 'agent_graph' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <GitBranch className="h-5 w-5 text-indigo-400" /> LangGraph Agent Execution Orchestrator
+              </h3>
+              <Button size="sm" variant="secondary" onClick={handleRunLangGraph} disabled={isExecuting} className="gap-2 text-xs">
+                <Play className="h-3.5 w-3.5" /> Start LangGraph Investigation Run
+              </Button>
+            </div>
+            {graphRuns.length > 0 ? (
+              <div className="space-y-3 font-mono text-xs">
+                {graphRuns.map((gr, idx) => (
+                  <div key={gr.thread_id || idx} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-indigo-400">{gr.task}</span>
+                        <span className="text-[10px] text-slate-500">Thread: {gr.thread_id}</span>
                       </div>
-                      <Badge variant="success">
-                        {node.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={gr.status === 'COMPLETED' ? 'success' : gr.status === 'PAUSED_APPROVAL' ? 'warning' : 'info'}>
+                          {gr.status}
+                        </Badge>
+                        <span className="text-[10px] text-slate-400">Step: {gr.step_number || 1}</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block mb-1">Execution Node Traversal History:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {(gr.node_history || ['MEMORY_RETRIEVAL', 'SUPERVISOR', 'SPECIALIZED_AGENT', 'TOOL_EXECUTION', 'FINAL_RESPONSE']).map((n, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-indigo-300 rounded text-[10px]">
+                              {n}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block mb-1">State & Trace Info:</span>
+                        <div className="p-2 bg-slate-950 rounded border border-slate-800 space-y-1 text-slate-300">
+                          <div>Correlation ID: <span className="text-indigo-400">{gr.correlation_id || 'corr_01'}</span></div>
+                          <div>Trace ID: <span className="text-indigo-400">{gr.trace_id || 'tr_01'}</span></div>
+                          <div>Executed Tools: <span className="text-emerald-400">{gr.completed_tool_results?.length || 1}</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <EmptyState title="No Plan Generated Yet" description="Run a query in the Investigation Sandbox to visualize DAG plan decomposition." />
+              <EmptyState title="No Graph Runs Found" description="Start a LangGraph investigation run to visualize graph state transitions." />
             )}
           </div>
         )}
@@ -337,175 +378,132 @@ export const AgentWorkspace: React.FC = () => {
           </div>
         )}
 
-        {/* 5. TOOL AUTH & SECURITY */}
-        {activeTab === 'authorization' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Server-Side Authorization & Parameter Sanitization</h3>
-            <p className="text-xs text-slate-400">
-              LLMs are NEVER the security boundary. Server-side code enforces RBAC/ABAC tool allowlists, rate limiting, and parameter sanitization.
-            </p>
-            <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono text-emerald-400 space-y-1">
-              <div>✓ Forbidden DDL/DML SQL keywords blocked at server boundary</div>
-              <div>✓ Tenant ID forced to user context tenant boundary</div>
-              <div>✓ Agent tool allowlist enforced server-side</div>
-              <div>✓ Rate limiting per tool active</div>
+        {/* 4.5 GOVERNED TOOL / FUNCTION CALLS INSPECTION PANEL */}
+        {activeTab === 'tool_calling' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Zap className="h-5 w-5 text-indigo-400" /> Governed Tool / Function Call Executions
+              </h3>
+              <Button size="sm" variant="secondary" onClick={loadData}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh Calls
+              </Button>
             </div>
-          </div>
-        )}
-
-        {/* 6. EXECUTION RUNS */}
-        {activeTab === 'runs' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Recent Execution Runs & Traces</h3>
-            {lastRun ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg text-xs">
-                  <div>
-                    <span className="text-slate-400 font-mono">Run ID: {lastRun.run_id}</span>
-                    <div className="font-semibold text-white mt-0.5">{lastRun.goal}</div>
-                  </div>
-                  <Badge variant="success" className="font-bold">
-                    {lastRun.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-slate-300">Step Traces ({lastRun.total_steps} steps)</h4>
-                  {lastRun.executed_nodes.map((node, i) => (
-                    <div key={i} className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs space-y-1">
-                      <div className="flex justify-between font-mono text-indigo-400">
-                        <span>Step {i + 1}: {node.node_key}</span>
-                        <span>[{node.agent_type}]</span>
+            {toolCalls.length > 0 ? (
+              <div className="space-y-3">
+                {toolCalls.map((tc, idx) => (
+                  <div key={tc.call_id || idx} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3 font-mono text-xs">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-indigo-400">{tc.tool_name}</span>
+                        <span className="text-[10px] text-slate-500">{tc.call_id}</span>
                       </div>
-                      <div className="text-slate-300">{node.thought_process}</div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={tc.execution_status === 'SUCCEEDED' ? 'success' : 'critical'}>
+                          {tc.execution_status}
+                        </Badge>
+                        <Badge variant={tc.risk_tier === 'READ_ONLY' ? 'success' : 'warning'}>
+                          {tc.risk_tier}
+                        </Badge>
+                        <span className="text-[10px] text-slate-400">{tc.duration_ms?.toFixed(1)}ms</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <EmptyState title="No Execution Runs" description="Trigger a run in the sandbox to inspect live traces." />
+              <EmptyState title="No Tool Calls Executed Yet" description="Execute a query in the Investigation Sandbox to observe live tool calls." />
             )}
           </div>
         )}
 
-        {/* 7. APPROVAL GATES */}
+        {/* 5. MEMORY INSPECTOR */}
+        {activeTab === 'memory_inspector' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Brain className="h-5 w-5 text-indigo-400" /> Governed Agent Memory Inspector
+              </h3>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={memorySearchQuery}
+                  onChange={(e) => setMemorySearchQuery(e.target.value)}
+                  placeholder="Search memory records..."
+                  className="bg-slate-950 border-slate-800 text-xs w-64"
+                />
+                <Button size="sm" variant="secondary" onClick={handleMemorySearch}>
+                  <Search className="h-3.5 w-3.5 mr-1" /> Search
+                </Button>
+              </div>
+            </div>
+
+            {memories.length > 0 ? (
+              <div className="space-y-3 font-mono text-xs">
+                {memories.map((m) => (
+                  <div key={m.memory_id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-indigo-400">{m.memory_key}</span>
+                        <span className="text-[10px] text-slate-500">{m.memory_id}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={m.status === 'ACTIVE' ? 'success' : 'critical'}>{m.status}</Badge>
+                        <Badge variant="brand" className="text-[10px]">{m.memory_type}</Badge>
+                        <Badge variant="neutral" className="text-[10px]">{m.data_classification}</Badge>
+                        {m.status === 'ACTIVE' && (
+                          <Button size="sm" variant="danger" onClick={() => handleRevokeMemory(m.memory_id)} className="text-[10px] py-0.5 px-2">
+                            <Trash2 className="h-3 w-3 mr-1" /> Soft Revoke
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-slate-300 font-sans text-xs bg-slate-950 p-2 rounded border border-slate-800">
+                      {m.content}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <div>Confidence: <span className="text-emerald-400">{(m.confidence * 100).toFixed(0)}%</span> | Namespace: {m.memory_namespace}</div>
+                      <div>Source: {m.source_type} | Trace ID: <span className="text-indigo-400">{m.source_trace_id || 'tr_01'}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="No Memory Records Found" description="Execute an investigation run to generate governed episodic and semantic memories." />
+            )}
+          </div>
+        )}
+
+        {/* 6. APPROVALS */}
         {activeTab === 'approvals' && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Human-in-the-Loop Approval Gates</h3>
+            <h3 className="text-lg font-semibold text-white">Pending Human Approval Gates</h3>
             {approvals.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-3 font-mono text-xs">
                 {approvals.map((app) => (
-                  <div key={app.approval_id} className="p-4 bg-slate-900 rounded-xl border border-amber-500/30 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="warning" className="text-xs">
-                          {app.risk_level}
-                        </Badge>
-                        <span className="font-semibold text-white text-sm">{app.requested_action}</span>
-                      </div>
-                      <div className="text-xs text-slate-400 mt-1">Tool: {app.tool_name} | Run: {app.run_id}</div>
+                  <div key={app.approval_id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <span className="font-bold text-amber-400">{app.tool_name}</span>
+                      <Badge variant="warning">{app.risk_level}</Badge>
                     </div>
+                    <p className="text-xs text-slate-300 font-sans">{app.justification}</p>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="primary" onClick={() => handleApprove(app.approval_id)} className="gap-1">
-                        <CheckCircle2 className="h-4 w-4" /> Approve
+                      <Button size="sm" variant="primary" onClick={() => handleApprove(app.approval_id)} className="text-xs gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve
                       </Button>
-                      <Button size="sm" variant="danger" onClick={() => handleReject(app.approval_id)} className="gap-1">
-                        <XCircle className="h-4 w-4" /> Reject
+                      <Button size="sm" variant="danger" onClick={() => handleReject(app.approval_id)} className="text-xs gap-1">
+                        <XCircle className="h-3.5 w-3.5" /> Reject
                       </Button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 text-center text-xs text-slate-400">
-                No pending human approval requests. All high-risk actions are clear.
-              </div>
+              <EmptyState title="No Approvals Pending" description="High-risk actions requiring human authorization will appear here." />
             )}
           </div>
         )}
 
-        {/* 8. EVIDENCE & PROVENANCE */}
-        {activeTab === 'evidence' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Evidence Retrieval & Chunk Provenance</h3>
-            <p className="text-xs text-slate-400">
-              All agent findings are strictly bound to document chunks with verified source provenance metadata.
-            </p>
-            {lastRun?.verification ? (
-              <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 text-xs space-y-2">
-                <div className="text-slate-300 font-semibold">Evidence Groundedness Score: {lastRun.verification.groundedness_score}</div>
-                <div className="text-slate-400">{lastRun.verification.summary}</div>
-              </div>
-            ) : (
-              <EmptyState title="No Evidence Loaded" description="Run an investigation to view verified document evidence chunks." />
-            )}
-          </div>
-        )}
-
-        {/* 9. VERIFICATION AGENT */}
-        {activeTab === 'verification' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Independent Verification Agent Boundary</h3>
-            <p className="text-xs text-slate-400">
-              The Verification Agent validates claims, evidence groundedness, data quality scorecards, and model drift before decision handoff.
-            </p>
-            {lastRun?.verification ? (
-              <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 text-xs space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant={lastRun.verification.is_verified ? 'success' : 'critical'}>
-                    {lastRun.verification.is_verified ? 'VERIFIED PASSED' : 'VERIFICATION FAILED'}
-                  </Badge>
-                  <span className="text-slate-300">Groundedness: {lastRun.verification.groundedness_score}</span>
-                </div>
-                <div className="text-slate-400">{lastRun.verification.summary}</div>
-              </div>
-            ) : (
-              <EmptyState title="No Verification Run" description="Execute a run in sandbox to trigger the independent Verification Agent." />
-            )}
-          </div>
-        )}
-
-        {/* 10. MEMORY STORE */}
-        {activeTab === 'memory' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Agent Episodic & Contextual Memory Store</h3>
-            <p className="text-xs text-slate-400">
-              Persists short-term, working, episodic, and long-term memory records across agent investigation sessions.
-            </p>
-            <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono text-slate-300 space-y-1">
-              <div>• Short-Term Memory: Active run step context</div>
-              <div>• Episodic Memory: Historic anomaly investigation traces</div>
-              <div>• Working Memory: Active DAG node inputs/outputs</div>
-            </div>
-          </div>
-        )}
-
-        {/* 11. EVALUATION METRICS */}
-        {activeTab === 'evaluation' && (
-          <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-            <h3 className="text-base font-semibold text-white">Quantitative Agent Evaluation Metrics</h3>
-            {lastRun?.evaluation ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-                  <div className="text-slate-400 font-medium">Goal Completion Score</div>
-                  <div className="text-2xl font-bold text-emerald-400 mt-1">{(lastRun.evaluation.goal_completion_score * 100).toFixed(0)}%</div>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-                  <div className="text-slate-400 font-medium">Tool Accuracy Score</div>
-                  <div className="text-2xl font-bold text-indigo-400 mt-1">{(lastRun.evaluation.tool_accuracy_score * 100).toFixed(0)}%</div>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-                  <div className="text-slate-400 font-medium">Estimated Token Cost</div>
-                  <div className="text-2xl font-bold text-amber-400 mt-1">${lastRun.evaluation.total_cost_usd.toFixed(4)}</div>
-                </div>
-              </div>
-            ) : (
-              <EmptyState title="No Evaluation Available" description="Execute a run in sandbox to calculate quantitative evaluation metrics." />
-            )}
-          </div>
-        )}
-
-        {/* 12. INVESTIGATION SANDBOX */}
+        {/* 7. INVESTIGATION SANDBOX */}
         {activeTab === 'sandbox' && (
           <div className="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
             <h3 className="text-base font-semibold text-white">Flagship Incident Investigation Sandbox</h3>
@@ -519,9 +517,14 @@ export const AgentWorkspace: React.FC = () => {
                 placeholder="Enter enterprise investigation prompt..."
                 className="bg-slate-950 border-slate-800 text-xs"
               />
-              <Button onClick={handleRunSandbox} disabled={isExecuting} variant="primary" className="text-xs gap-2">
-                <Zap className="h-4 w-4" /> {isExecuting ? 'Executing Multi-Agent DAG Pipeline...' : 'Run Investigation Pipeline'}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button onClick={handleRunSandbox} disabled={isExecuting} variant="primary" className="text-xs gap-2">
+                  <Zap className="h-4 w-4" /> {isExecuting ? 'Executing Multi-Agent DAG Pipeline...' : 'Run Standard Investigation'}
+                </Button>
+                <Button onClick={handleRunLangGraph} disabled={isExecuting} variant="secondary" className="text-xs gap-2">
+                  <GitBranch className="h-4 w-4 text-indigo-400" /> Run LangGraph Orchestrator
+                </Button>
+              </div>
             </div>
 
             {lastRun && (

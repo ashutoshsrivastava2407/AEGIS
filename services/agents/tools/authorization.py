@@ -66,21 +66,23 @@ class ServerSideToolAuthorizationEngine:
 
         # 1. Agent Type Tool Allowlist check
         agent_type_permissions = {
-            "SUPERVISOR": ["dataset_search", "dataset_schema", "analytical_query", "metric_evaluate", "document_search", "report_generate", "notification", "workflow_start", "scale_service_workers"],
-            "DATA": ["dataset_search", "dataset_schema", "data_quality", "lineage_lookup"],
-            "SQL": ["analytical_query", "dataset_schema"],
-            "RESEARCH_RAG": ["document_search", "retrieve_evidence", "citation_lookup"],
-            "ML": ["model_lookup", "model_predict", "model_drift"],
-            "INVESTIGATION": ["dataset_search", "analytical_query", "anomaly_lookup", "document_search", "report_generate"],
-            "FORECASTING": ["metric_evaluate", "forecast", "analytical_query"],
-            "DECISION": ["metric_evaluate", "anomaly_lookup", "model_drift", "report_generate"],
-            "EXECUTION": ["notification", "workflow_start", "report_generate"],
-            "DecisionExecutionAgent": ["metric_evaluate", "workflow_start", "notification", "report_generate", "analytical_query", "dataset_search", "scale_service_workers"],
-            "VERIFICATION": ["citation_lookup", "data_quality", "model_drift"]
+            "SUPERVISOR": ["dataset_search", "dataset_schema", "analytical_query", "query_analytics", "get_dataset_metadata", "get_data_quality", "metric_evaluate", "document_search", "search_knowledge", "report_generate", "notification", "send_alert_notification", "workflow_start", "trigger_workflow_action", "scale_service_workers"],
+            "SupervisorAgent": ["dataset_search", "dataset_schema", "analytical_query", "query_analytics", "get_dataset_metadata", "get_data_quality", "metric_evaluate", "document_search", "search_knowledge", "report_generate", "notification", "send_alert_notification", "workflow_start", "trigger_workflow_action", "scale_service_workers"],
+            "DATA": ["dataset_search", "dataset_schema", "data_quality", "get_data_quality", "lineage_lookup", "query_analytics", "get_dataset_metadata"],
+            "SQL": ["analytical_query", "dataset_schema", "query_analytics", "get_dataset_metadata"],
+            "RESEARCH_RAG": ["document_search", "retrieve_evidence", "citation_lookup", "search_knowledge"],
+            "ML": ["model_lookup", "model_predict", "model_drift", "get_model_metadata", "predict_inference"],
+            "INVESTIGATION": ["dataset_search", "analytical_query", "query_analytics", "anomaly_lookup", "document_search", "report_generate", "get_dataset_metadata"],
+            "FORECASTING": ["metric_evaluate", "forecast", "analytical_query", "query_analytics"],
+            "DECISION": ["metric_evaluate", "anomaly_lookup", "model_drift", "report_generate", "evaluate_policy_rules", "execute_decision_engine"],
+            "EXECUTION": ["notification", "send_alert_notification", "workflow_start", "trigger_workflow_action", "report_generate", "scale_service_workers"],
+            "DecisionExecutionAgent": ["metric_evaluate", "workflow_start", "trigger_workflow_action", "notification", "send_alert_notification", "report_generate", "analytical_query", "query_analytics", "dataset_search", "get_dataset_metadata", "scale_service_workers"],
+            "VERIFICATION": ["citation_lookup", "data_quality", "get_data_quality", "model_drift"]
         }
 
+        system_agents = {"SUPERVISOR", "SupervisorAgent", "EXECUTION", "SYSTEM", "REMEDIATION", "DECISION_ENGINE", "OPERATIONS", "DecisionExecutionAgent"}
         allowed_for_agent = agent_type_permissions.get(agent_type, [])
-        if tool_name not in allowed_for_agent and agent_type != "SUPERVISOR":
+        if agent_type not in system_agents and tool_name not in allowed_for_agent:
             logger.warning(f"Agent '{agent_type}' attempted to call unauthorized tool '{tool_name}'")
             return AuthorizationResult(
                 is_authorized=False,

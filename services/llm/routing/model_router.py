@@ -22,6 +22,7 @@ class ModelRouter:
         prompt: str,
         preferred_model: str = "aegis-llm-pro",
         system_prompt: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
         tenant_id: str = "default"
     ) -> Dict[str, Any]:
         # Try Primary Provider
@@ -30,7 +31,8 @@ class ModelRouter:
                 res = self._providers["primary"].generate_chat(
                     model=preferred_model,
                     prompt=prompt,
-                    system_prompt=system_prompt
+                    system_prompt=system_prompt,
+                    tools=tools
                 )
                 res["routing_execution"] = "PRIMARY"
                 res["tenant_id"] = tenant_id
@@ -44,7 +46,8 @@ class ModelRouter:
         res = self._providers["fallback"].generate_chat(
             model=f"{preferred_model}-fallback",
             prompt=prompt,
-            system_prompt=system_prompt
+            system_prompt=system_prompt,
+            tools=tools
         )
         res["routing_execution"] = "FALLBACK"
         res["tenant_id"] = tenant_id

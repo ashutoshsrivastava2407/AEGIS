@@ -15,6 +15,7 @@ class LLMGatewayService:
         prompt: str,
         preferred_model: str = "aegis-llm-pro",
         system_prompt: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
         tenant_id: str = "default"
     ) -> Dict[str, Any]:
         # 1. Inspect Prompt for Safety
@@ -36,6 +37,7 @@ class LLMGatewayService:
             prompt=sanitized_prompt,
             preferred_model=preferred_model,
             system_prompt=system_prompt,
+            tools=tools,
             tenant_id=tenant_id
         )
 

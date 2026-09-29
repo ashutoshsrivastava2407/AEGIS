@@ -45,7 +45,7 @@ from packages.database.models.agent import (
     AgentCapabilityModel,
     AgentRunModel,
 )
-from packages.database.models.agent_tool import AgentToolModel, AgentToolPermissionModel
+from packages.database.models.agent_tool import AgentToolModel, AgentToolPermissionModel, DurableToolCallModel, ToolCallEventModel
 from packages.database.models.agent_plan import AgentPlanModel, AgentPlanNodeModel
 from packages.database.models.agent_execution import (
     AgentStepModel,
@@ -54,7 +54,13 @@ from packages.database.models.agent_execution import (
     AgentTraceEventModel,
 )
 from packages.database.models.agent_approval import AgentApprovalModel
-from packages.database.models.agent_memory import AgentMemoryModel
+from packages.database.models.agent_memory import (
+    AgentMemoryModel,
+    AgentMemoryEventModel,
+    AgentMemoryNamespaceModel,
+    AgentMemoryRetrievalModel,
+    AgentGraphCheckpointModel,
+)
 from packages.database.models.agent_evaluation import AgentEvaluationModel
 from packages.database.models.decision import DecisionModel, DecisionVersionModel, DecisionContextModel
 from packages.database.models.decision_evidence import DecisionEvidenceModel
@@ -221,6 +227,8 @@ __all__ = [
     "AgentRunModel",
     "AgentToolModel",
     "AgentToolPermissionModel",
+    "DurableToolCallModel",
+    "ToolCallEventModel",
     "AgentPlanModel",
     "AgentPlanNodeModel",
     "AgentStepModel",
@@ -229,6 +237,10 @@ __all__ = [
     "AgentTraceEventModel",
     "AgentApprovalModel",
     "AgentMemoryModel",
+    "AgentMemoryEventModel",
+    "AgentMemoryNamespaceModel",
+    "AgentMemoryRetrievalModel",
+    "AgentGraphCheckpointModel",
     "AgentEvaluationModel",
     "DecisionModel",
     "DecisionVersionModel",

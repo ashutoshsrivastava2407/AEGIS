@@ -4,6 +4,8 @@ export interface AgentOverview {
   active_agents: number;
   total_governed_tools: number;
   pending_human_approvals: number;
+  total_governed_memories?: number;
+  active_graph_runs?: number;
   supported_agent_types: string[];
 }
 
@@ -38,6 +40,43 @@ export interface PendingApprovalItem {
   approval_status: string;
   created_at: string;
   expires_at?: string;
+}
+
+export interface AgentMemoryItem {
+  memory_id: string;
+  tenant_id: string;
+  workspace_id: string;
+  memory_namespace: string;
+  memory_type: string;
+  memory_key: string;
+  content: string;
+  structured_payload: Record<string, any>;
+  confidence: number;
+  importance: number;
+  data_classification: string;
+  source_type: string;
+  source_trace_id?: string;
+  status: string;
+  created_at: string;
+}
+
+export interface GraphRunItem {
+  agent_run_id: string;
+  thread_id: string;
+  tenant_id: string;
+  workspace_id?: string;
+  agent_id: string;
+  task: string;
+  status: string;
+  paused_for_approval?: boolean;
+  current_node?: string;
+  step_number?: number;
+  node_history?: string[];
+  completed_tool_results?: Record<string, any>[];
+  final_output?: Record<string, any>;
+  correlation_id?: string;
+  trace_id?: string;
+  created_at?: string;
 }
 
 export interface AgentRunResponse {
@@ -144,5 +183,73 @@ export async function rejectAction(approvalId: string, operator: string = 'admin
     body: JSON.stringify({ operator, comments }),
   });
   if (!res.ok) throw new Error('Failed to reject action');
+  return res.json();
+}
+
+export async function fetchToolCalls(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/tool-calls`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.tool_calls || [];
+}
+
+// Memory API Helpers
+export async function fetchAgentMemories(): Promise<AgentMemoryItem[]> {
+  const res = await fetch(`${API_BASE}/memory`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.memories || [];
+}
+
+export async function searchAgentMemories(queryText: string): Promise<AgentMemoryItem[]> {
+  const res = await fetch(`${API_BASE}/memory/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query_text: queryText }),
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results || [];
+}
+
+export async function revokeAgentMemory(memoryId: string, reason: string = 'Revoked from workspace UI'): Promise<any> {
+  const res = await fetch(`${API_BASE}/memory/${memoryId}?reason=${encodeURIComponent(reason)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to revoke memory');
+  return res.json();
+}
+
+// LangGraph Orchestration Helpers
+export async function runLangGraphAgent(task: string, requiresApproval: boolean = false): Promise<GraphRunItem> {
+  const res = await fetch(`${API_BASE}/graph/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task, requires_approval: requiresApproval }),
+  });
+  if (!res.ok) throw new Error('Failed to start LangGraph agent run');
+  return res.json();
+}
+
+export async function resumeLangGraphAgent(threadId: string, approvalId: string, approvalDecision: string = 'APPROVED'): Promise<any> {
+  const res = await fetch(`${API_BASE}/graph/resume`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, approval_id: approvalId, approval_decision: approvalDecision }),
+  });
+  if (!res.ok) throw new Error('Failed to resume LangGraph agent');
+  return res.json();
+}
+
+export async function fetchGraphRuns(): Promise<GraphRunItem[]> {
+  const res = await fetch(`${API_BASE}/graph/runs`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.graph_runs || [];
+}
+
+export async function fetchGraphTelemetry(): Promise<Record<string, any>> {
+  const res = await fetch(`${API_BASE}/graph/telemetry`);
+  if (!res.ok) return {};
   return res.json();
 }

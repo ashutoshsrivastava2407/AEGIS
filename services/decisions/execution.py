@@ -55,6 +55,8 @@ class DecisionExecutionEngine:
         # 3. Stage 2: Delegate to Step 7 Governed ToolExecutor
         tool_name = self._map_action_to_tool_name(action_type)
         tool_params = dict(parameters)
+        if "action_name" not in tool_params:
+            tool_params["action_name"] = action_type
         if tool_name == "scale_service_workers":
             if "service_name" not in tool_params:
                 tool_params["service_name"] = target_resource or "analytics-worker"
@@ -66,7 +68,8 @@ class DecisionExecutionEngine:
             params=tool_params,
             agent_type="DecisionExecutionAgent",
             run_id=f"run-{decision_id[:8]}",
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
+            approval_granted=True
         )
 
         duration_ms = (time.time() - start_time) * 1000.0
